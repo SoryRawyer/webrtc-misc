@@ -1,0 +1,31 @@
+<html>
+<head>
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <link rel="stylesheet" href="./index.css" />
+</head>
+<body>
+    <div class="container">
+        <div class="videocontainer left">
+            <video id="localVideo" autoplay muted playsinline></video>
+        </div>
+        <div class="videocontainer right">
+            <video id="remoteVideo" autoplay playsinline></video>
+        </div>
+        <div class="left">
+            <p>Client ID: <span id="clientId"></span></p>
+            <p>
+                <button id="audioBtn">mute audio</button>
+                <button id="videoBtn">mute video</button>
+                <button id="shareBtn">share screen</button>
+            </p>
+        </div>
+        <div class="right">
+            <p>Peer ID: <span id="peerId"></span></p>
+            <p>
+                <button id="hangupButton" disabled>hangup</button>
+            </p>
+        </div>
+    </div>
+    <script src="./index.js"></script>
+</body>
+</html>
