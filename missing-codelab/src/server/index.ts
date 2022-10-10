@@ -7,6 +7,8 @@ import { RawData, WebSocket, WebSocketServer } from "ws";
 import * as path from "path";
 import * as uuid from "uuid";
 
+import { Result } from "../index";
+
 const port = 3000;
 const app: Express = express();
 const server = http.createServer(app);
@@ -24,23 +26,12 @@ type SigMessage = {
   id: string;
 };
 
-type Ok<T> = {
-  status: "ok";
-  value: T;
-};
-
-type Err = {
-  status: "err";
-  msg: string;
-};
-
-type Result<T> = Ok<T> | Err;
-
 function parseWsMessage(data: RawData): Result<SigMessage> {
   let obj = JSON.parse(data.toString());
   if ("id" in obj) {
     return { status: "ok", value: obj };
   }
+  console.log(obj);
   return { status: "err", msg: "missing id field" };
 }
 
@@ -50,15 +41,16 @@ wss.on("connection", (ws) => {
   connections.set(id, ws);
   ws.send(
     JSON.stringify({
-      msg: "hi :)",
+      kind: "hello",
       id,
     })
   );
 
   ws.send(
     JSON.stringify({
-      type: "iceServers",
+      kind: "iceServers",
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      id,
     })
   );
 
@@ -68,7 +60,6 @@ wss.on("connection", (ws) => {
   });
 
   ws.on("message", (msg) => {
-    console.log(id, msg);
     let maybeData = parseWsMessage(msg);
     if (maybeData.status === "err") {
       ws.send(JSON.stringify(maybeData));
