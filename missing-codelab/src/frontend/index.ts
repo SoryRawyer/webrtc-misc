@@ -78,7 +78,6 @@ function parseMessage(data: object): Result<SigMessage> {
 }
 
 async function init() {
-  // TODO: check if there's a hash in the URL
   let localStream = await getUserMedia();
   let localVideoEl: HTMLVideoElement = document.getElementById(
     "localVideo"
@@ -110,6 +109,10 @@ function registerEndCall(ws: WebSocket) {
 async function connect(
   localStream: MediaStream
 ): Promise<{ ws: WebSocket; stream: MediaStream }> {
+  // WebRTC revolves around 3 main state machines:
+  // Signaling connection
+  // ICE connection
+  // Connection
   let ws = new WebSocket(`${WS_PROTOCOL}://${window.location.host}`);
   ws.addEventListener("open", () => {
     console.log("websocket, hi!");
@@ -155,7 +158,7 @@ async function connect(
           console.log("we're busy, actually");
           ws.send(
             JSON.stringify({
-              type: "bye",
+              kind: "bye",
               id: data.id,
             })
           );
@@ -179,6 +182,10 @@ async function connect(
             id: data.id,
           })
         );
+        const hangupBtn = document.getElementById(
+          "hangupButton"
+        ) as HTMLButtonElement;
+        hangupBtn.disabled = false;
         break;
       case "answer":
         if (STATE.peers.has(data.id)) {
@@ -219,7 +226,7 @@ function createPeerConnection(
   pc.addEventListener("track", (e) => {
     const remoteVideo = document.getElementById(
       "remoteVideo"
-    )! as HTMLVideoElement;
+    ) as HTMLVideoElement;
     remoteVideo.onloadedmetadata = () => {
       console.log(peerId, "loaded metadata");
     };
@@ -237,6 +244,8 @@ function createPeerConnection(
   pc.addEventListener("signalingstatechange", () => {
     console.log(peerId, "signalingstatechange", pc.signalingState);
   });
+
+  // TODO: initialize stats collection
 
   STATE.peers.set(peerId, pc);
   return pc;
@@ -264,7 +273,11 @@ async function call(peerId: string, ws: WebSocket, stream: MediaStream) {
       id: peerId,
     })
   );
-  // TODO: set button to disabled and set text of peer id element
+  const hangupBtn = document.getElementById(
+    "hangupButton"
+  ) as HTMLButtonElement;
+  hangupBtn.disabled = false;
+  document.getElementById("peerId")!.innerText = peerId;
 }
 
 function hangup(peerId: string, ws: WebSocket) {
